@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$MEMETD - Hacker Trading Game</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>$MEMETD - Hacker Trading Game</h1>
+
+    <!-- Balance Display -->
+    <div id="balance-container">
+      <h2>Balance: <span id="balance">$10000.00</span></h2>
+    </div>
+
+    <!-- Chart Section -->
+    <div id="chart-container">
+      <h2 id="chart-title">Price Chart</h2>
+      <canvas id="coinChart"></canvas>
+    </div>
+
+    <!-- Market, Trade, and Positions Section -->
+    <div class="market-trade-container">
+      <div id="market">
+        <h2>Market</h2>
+        <div id="coin-list" class="coin-list">
+          <!-- Coin list will populate here -->
+        </div>
+      </div>
+
+      <div id="trade">
+        <h2>Trade</h2>
+        <label for="amount">Amount in $:</label>
+        <input type="number" id="amount" min="1" placeholder="Enter amount in dollars">
+        <div class="trade-buttons">
+          <button id="buy-button">Buy</button>
+          <button id="sell-button">Sell</button>
+          <button id="max-sell-button">Max Sell</button>
+        </div>
+      </div>
+
+      <div id="positions">
+        <h2>Your Positions</h2>
+        <div id="position-list">
+          <!-- Open positions will populate here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Coin Info Section -->
+    <div id="coin-info-container">
+      <h2>Coin Information</h2>
+      <div id="coin-info">
+        <p>Volume: <span id="volume">Loading...</span></p>
+        <p>Market Cap: <span id="market-cap">Loading...</span></p>
+      </div>
+    </div>
+
+    <!-- Countdown and Leaderboard Section -->
+    <div id="countdown">
+      <h3>Next Coin Launch In: <span id="timer">15s</span></h3>
+    </div>
+    
+    <!-- Updated Leaderboard Section -->
+    <div id="leaderboard">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboard-list">
+        <!-- Leaderboard players will populate here -->
+      </ul>
+      <button id="add-random-player">Add Random Player</button>
+    </div>
+
+    <!-- Profit/Loss Chart Section -->
+    <div id="pl-chart-container">
+      <h2>Cumulative Profit/Loss Chart</h2>
+      <canvas id="plChart"></canvas>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="leaderboard.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let balance = 10000;
+      let coins = [
+        { name: "$MEMETD", price: 0.05, volume: 1000000, marketCap: 50000000, lastPrice: 0.05, trend: 0.01 },
+      ];
+      let positions = [];
+      let selectedCoin = null;
+      let chart = null;
+      let plChart = null;
+      let chartData = [];
+
+      document.getElementById("buy-button").addEventListener("click", buyCoin);
+      document.getElementById("sell-button").addEventListener("click", sellCoin);
+      document.getElementById("max-sell-button").addEventListener("click", maxSell);
+
+      function initialize() {
+        updateBalanceDisplay();
+        updateMarket();
+        updateCoinInfo();
+      }
+
+      function updateBalanceDisplay() {
+        const balanceElement = document.getElementById("balance");
+        if (balanceElement) {
+          balanceElement.innerText = `$${balance.toFixed(2)}`;
+        } else {
+          console.error("Balance element not found!");
+        }
+      }
+
+      function updateCoinInfo() {
+        if (selectedCoin) {
+          document.getElementById("volume").innerText = selectedCoin.volume.toLocaleString();
+          document.getElementById("market-cap").innerText = `$${selectedCoin.marketCap.toLocaleString()}`;
+        }
+      }
+
+      function updateMarket() {
+        coins.forEach(coin => {
+          coin.lastPrice = coin.price;
+          coin.price = simulatePriceChange(coin.price, coin.trend);
+        });
+
+        const coinList = document.getElementById("coin-list");
+        coinList.innerHTML = coins.map(coin => {
+          const priceDirection = coin.price > coin.lastPrice ? 'up' : 'down';
+          return `
+            <div onclick="selectCoin('${coin.name}')" class="coin-option">
+              <span>${coin.name}</span>
+              <span>Price: <span class="${priceDirection}">$${coin.price.toFixed(4)}</span></span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      window.selectCoin = function (coinName) {
+        selectedCoin = coins.find(coin => coin.name === coinName);
+        document.getElementById("chart-title").innerText = `${selectedCoin.name} Price Chart`;
+        updateCoinInfo();
+        if (!chartData[selectedCoin.name]) {
+          chartData[selectedCoin.name] = [];
+        }
+        setupChart();
+      };
+
+      function simulatePriceChange(currentPrice, trend) {
+        const isDip = Math.random() < 0.25 && Math.random() < 0.5;
+        let newPrice = currentPrice * (1 + trend + (isDip ? -0.15 : 0.01));
+        return Math.max(newPrice, 0.01);
+      }
+
+      // Initialize everything after DOM is loaded
+      initialize();
+    });
+  </script>
+</body>
+</html>
